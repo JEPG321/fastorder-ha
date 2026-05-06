@@ -1,0 +1,56 @@
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: fastorder-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - menu-service
+      - order-service
+      - inventory-service
+      - kitchen-service
+      - delivery-service
+      - notification-service
+    networks:
+      - fastorder-network
+
+  menu-service:
+    image: fastorder/menu-service:latest
+    container_name: fastorder-menu-service
+    networks:
+      - fastorder-network
+
+  order-service:
+    image: fastorder/order-service:latest
+    container_name: fastorder-order-service
+    networks:
+      - fastorder-network
+
+  inventory-service:
+    image: fastorder/inventory-service:latest
+    container_name: fastorder-inventory-service
+    networks:
+      - fastorder-network
+
+  kitchen-service:
+    image: fastorder/kitchen-service:latest
+    container_name: fastorder-kitchen-service
+    networks:
+      - fastorder-network
+
+  delivery-service:
+    image: fastorder/delivery-service:latest
+    container_name: fastorder-delivery-service
+    networks:
+      - fastorder-network
+
+  notification-service:
+    image: fastorder/notification-service:latest
+    container_name: fastorder-notification-service
+    networks:
+      - fastorder-network
+
+networks:
+  fastorder-network:
+    driver: bridge
