@@ -90,3 +90,54 @@ git pull origin develop
 ```
 
 Luego abrir un Pull Request en GitHub desde `develop` hacia `main`.
+
+## API Gateway
+
+El servicio `api-gateway` es el punto de entrada unico de FastOrder HA. Esta construido con Spring Boot, Spring Cloud Gateway, Actuator y Micrometer Prometheus. No contiene logica de negocio; su responsabilidad es redirigir peticiones hacia los microservicios internos y exponer endpoints de salud y metricas.
+
+### Rutas configuradas
+
+El gateway corre en el puerto `8080` y redirige las rutas publicas hacia los servicios internos:
+
+| Ruta publica | Servicio interno |
+| --- | --- |
+| `/api/menu/**` | `http://menu-service:8081` |
+| `/api/orders/**` | `http://order-service:8082` |
+| `/api/inventory/**` | `http://inventory-service:8083` |
+| `/api/kitchen/**` | `http://kitchen-service:8084` |
+| `/api/delivery/**` | `http://delivery-service:8085` |
+| `/api/notifications/**` | `http://notification-service:8086` |
+
+Todas las rutas usan `StripPrefix=1`, por lo que el prefijo `/api` se elimina antes de reenviar la peticion. Por ejemplo:
+
+```text
+http://localhost:8080/api/menu -> http://menu-service:8081/menu
+```
+
+### Levantar con Docker Compose
+
+Desde la raiz del repositorio:
+
+```bash
+docker compose up --build api-gateway
+```
+
+El archivo `docker-compose.yml` incluye la red `fastorder-network` y deja preparado el `depends_on` hacia los servicios internos. Las imagenes de los demas microservicios deben existir o ser reemplazadas por sus builds cuando cada servicio sea implementado.
+
+Mientras los demas servicios aun no existan, se puede levantar solo el gateway para probar Actuator:
+
+```bash
+docker compose up --build --no-deps api-gateway
+```
+
+### Probar health check
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+### Probar metricas Prometheus
+
+```bash
+curl http://localhost:8080/actuator/prometheus
+```
